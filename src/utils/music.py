@@ -4,7 +4,7 @@ import yt_dlp
 
 
 ffmpeg_opt = {'options': '-vn'}
-ydl_opt = {'format': 'bestaudio', 'noplaylist': True}
+ydl_opt = {'format': 'bestaudio', 'verbose': True, 'extractor_args': {"youtube": {"player_client": ["android", "web"]}}}
 
 class MusicBot(commands.Cog):
     def __init__(self, client):
@@ -34,7 +34,9 @@ class MusicBot(commands.Cog):
     async def play_next(self, ctx):
         if self.queue:
             url, title = self.queue.pop(0)
-            source = await discord.FFmpegOpusAudio.from_probe(url, **ffmpeg_opt)
+            # source = await discord.FFmpegOpusAudio.from_probe(url, **ffmpeg_opt)
+            before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
+            source = discord.FFmpegPCMAudio(url, before_options=before_options)
             ctx.voice_client.play(source, after=lambda _: self.client.loop.create_task(self.play_next(ctx)))
             await ctx.send(f'Now playing **{title}**')
         elif not ctx.voice_client.is_playing():
