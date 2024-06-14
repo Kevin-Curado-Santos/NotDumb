@@ -35,7 +35,7 @@ class MusicBot(commands.Cog):
         if self.queue:
             url, title = self.queue.pop(0)
             source = await discord.FFmpegOpusAudio.from_probe(url, **ffmpeg_opt)
-            ctx.voice_client.play(source, after=lambda _: self.client.loop.asyncio.create_task(self.play_next(ctx)))
+            ctx.voice_client.play(source, after=lambda _: self.client.loop.create_task(self.play_next(ctx)))
             await ctx.send(f'Now playing **{title}**')
         elif not ctx.voice_client.is_playing():
             await ctx.send("Queue os empty!")
