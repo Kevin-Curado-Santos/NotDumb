@@ -27,7 +27,7 @@ class MusicBot(commands.Cog):
                 url = info['url']
                 title = info['title']
                 self.queue.append((url,title))
-                await ctx.send(f'Added t queue **{title}**')
+                await ctx.send(f'Added **{title}** to queue')
         if not ctx.voice_client.is_playing():
             await self.play_next(ctx)
 
@@ -38,16 +38,18 @@ class MusicBot(commands.Cog):
             ctx.voice_client.play(source, after=lambda _: self.client.loop.asyncio.create_task(self.play_next(ctx)))
             await ctx.send(f'Now playing **{title}**')
         elif not ctx.voice_client.is_playing():
-            await ctx.send("Queue os empty!")
+            await ctx.send("Queue is empty!")
 
     @commands.command()
     async def skip(self, ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.stop()
-            await ctx.send("stopped")
+            await ctx.send("Stopped!")
 
     @commands.command()
     async def leave(self, ctx):
+        if ctx.voice_client and ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
         await ctx.voice_client.disconnect()
 
 
