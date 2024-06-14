@@ -6,6 +6,7 @@ import asyncio
 
 from utils.music import MusicBot
 from utils.dnd import Dndbot
+from utils.code import Codebot
 
 discord.utils.setup_logging()
 
@@ -43,6 +44,7 @@ async def main():
     async with bot:
         await bot.add_cog(MusicBot(bot))
         await bot.add_cog(Dndbot(bot))
+        await bot.add_cog(Codebot(bot))
         await bot.start(TOKEN)
 
 if __name__ == "__main__":
