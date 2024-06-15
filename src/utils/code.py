@@ -37,14 +37,28 @@ def future_contests(request):
 class Codebot(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self.all_tags = open("src/utils/tag.txt").read().split('\n')
+        
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction : discord.Reaction, user):
+        if str(reaction) == "🔁":
+            embeds = reaction.message.embeds
+            if len(embeds) == 0:
+                return
+            emb_fields = embeds[0].fields
+
+            for f in emb_fields:
+                if f.name == "Query":
+                    query = f.value
+                    await self.problem(ctx, tags = query)
 
     @commands.command()
     async def problem(self, ctx, *, tags = ""):
         rating = (0, 10000)
-        tags = tags.split(',')
+        tagsl = tags.split(',')
         problem_tags = []
 
-        for t in tags:
+        for t in tagsl:
             if t == "":
                 pass
             elif '~' in t:
@@ -56,7 +70,12 @@ class Codebot(commands.Cog):
                 pass
                 # special tags
             else:
-                problem_tags.append(t)
+                if t in self.all_tags:
+                    problem_tags.append(t)
+                else:
+                    await ctx.send(f"Unknown tag {t}")
+                    await self.tags(ctx)
+                    return 
 
         query_url = problemset_api
         if len(problem_tags) > 0:
@@ -77,11 +96,18 @@ class Codebot(commands.Cog):
         
         emb = discord.Embed(title = random_problem["name"])
         emb.add_field(name=problem_url, value = '')
+        if tags != "":
+            emb.add_field(name="Query", value = tags)
         emb.add_field(name="Tags", value=', '.join(random_problem["tags"] + [str(random_problem["rating"])] if "rating" in random_problem else []))
 
         await ctx.send(embed = emb)
 
 
+    @commands.command()
+    async def tags(self, ctx):
+        emb = discord.Embed(title = "All Problem Tags")
+        emb.add_field(name="", value = f"{'\n'.join([f"`{tag}`" for tag in self.all_tags if tag != ''])}")
+        await ctx.send(embed = emb)
 
     @commands.command()
     async def contests(self, ctx):

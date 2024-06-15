@@ -16,12 +16,10 @@ class Dndbot(commands.Cog):
         self.client = client 
         with yt_dlp.YoutubeDL(ydl_opt) as ydl:
             info = ydl.extract_info(f"ytsearch:Rolling Dice - Sound Effect (HD)", download=True)
-            print(f"Download info: {info}")
             if 'entries' in info:
                 info = info['entries'][0]
             url = info['url']
             title = info['title']
-            print(f"Download url: {url}")
             # source = await discord.FFmpegOpusAudio.from_probe(url, **ffmpeg_opt)
             before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
             self.dice_sound_source = discord.FFmpegPCMAudio(url, before_options=before_options)
