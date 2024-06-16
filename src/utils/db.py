@@ -16,10 +16,13 @@ def store_user(db, discord_id, codeforcer_name):
     if user:
         cursor = db.cursor()
         cursor.execute("UPDATE users_table Set codeforcer_name = ? WHERE discord_id = ?", (codeforcer_name, discord_id))
+        db.commit()
+        return False
     else:
         cursor = db.cursor()
         cursor.execute("INSERT INTO users_table VALUES(?, ?)", (discord_id, codeforcer_name))
-    db.commit()
+        db.commit()
+        return True
 
 def get_user(db, discord_id):
     cursor = db.cursor()
