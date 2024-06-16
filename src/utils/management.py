@@ -72,8 +72,12 @@ class Management(commands.Cog):
                 await ctx.send('You are not registered! Try using `!register`.')
         else:
             handles = handles.split(' ')
-            query_handles = ';'.join(list(set(handles)))
-            query_url += f'?{query_handles}'
+            args = []
+            for h in handles:
+                if h not in args:
+                    args.append(h)
+            query_handles = ';'.join(args)
+            query_url += f'{query_handles}'
             resp = requests.get(query_url)
             result = process_rank(resp)
             embs = []
