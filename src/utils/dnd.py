@@ -2,14 +2,11 @@ import discord
 import random
 from discord.ext import commands
 import yt_dlp
+import d20
 
 ffmpeg_opt = {'options': '-vn'}
 ydl_opt = {'format': 'bestaudio', 'verbose': True, 'extractor_args': {"youtube": {"player_client": ["android", "web"]}}}
 
-def roll_multiple(expr):
-    [num, dice] = expr.split('d')
-
-    return [random.randint(1, int(dice)) for _ in range(int(num) if num != '' else 1)]
 
 class Dndbot(commands.Cog):
     def __init__(self, client):
@@ -46,10 +43,10 @@ class Dndbot(commands.Cog):
                 embedVar.add_field(name=f'You rolled a `{roll}`', value='')
                 await ctx.send(embed=embedVar)
         else:
-            results = roll_multiple(expr)
+            result = d20.roll(expr)
 
             embedVar = discord.Embed(title=f'{expr} roll', color=discord.Color.random())
-            embedVar.add_field(name=f'You rolled {sum(results)}', value='+'.join(map(str, results)))
+            embedVar.add_field(name=f'You rolled {result.total}', value=str(result))
             await ctx.send(embed=embedVar)
 
 
