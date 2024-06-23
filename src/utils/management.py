@@ -37,9 +37,14 @@ class Management(commands.Cog):
 
     @commands.command()
     async def register(self, ctx, *, codeforces_name):
+        resp = requests.get(info_url+codeforces_name)
+        ok = json.loads(resp.text)["status"]
+        if ok == "FAILED":
+            await ctx.send(f"{codeforces_name} not found in codeforces!")
+            return
         res = store_user(self.db, ctx.author.id, codeforces_name)
         if codeforces_name == '':
-            await ctx.send(f"You forgot to provide the codeforces name")
+            await ctx.send(f"You forgot to provide your codeforces name")
             return
         if res:
             await ctx.send(f"Welcome {codeforces_name}! Ready to duel?")
@@ -92,3 +97,17 @@ class Management(commands.Cog):
                 embs.append(emb)
                 
             await ctx.send(embeds = embs)
+
+    @commands.command()
+    async def rank(self, ctx, *, handles=""):
+        if handles == "":
+            handle = get_user(self.db, ctx.author.id)
+            if handle != None:
+                thumb = ctx.author.display_avatar
+                emb = discord.Embed(title=ctx.author.display_name)
+                emb.set_thumbnail(url=thumb)
+                emb.add_field(name="idk yet", value=get_rating(self.db, ctx.author.id), inline=False)
+                await ctx.send(embed = emb)
+            else:
+                await ctx.send('You are not registered! Try using `!register`.')
+
