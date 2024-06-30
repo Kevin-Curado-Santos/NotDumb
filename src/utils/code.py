@@ -1,5 +1,6 @@
 import requests
 import discord
+import asyncio
 import random
 import json
 
@@ -40,22 +41,27 @@ class Codebot(commands.Cog):
         self.all_tags = open("src/utils/tag.txt").read().split('\n')
         
     @commands.Cog.listener()
-    async def on_reaction_add(self, reaction : discord.Reaction, user):
+    async def on_reaction_add(self, reaction : discord.Reaction, user : discord.User):
+
         if str(reaction) == "🔁":
+            message = reaction.message.reference.cached_message
             embeds = reaction.message.embeds
             if len(embeds) == 0:
                 return
             emb_fields = embeds[0].fields
-
             for f in emb_fields:
                 if f.name == "Query":
                     query = f.value
-                    await self.problem(ctx, tags = query)
+                    await reaction.message.delete()
+                    await self.problem(message, tags = query)
+                    return
+            await reaction.message.delete()
+            await self.problem(message, tags="")
 
     @commands.command()
     async def problem(self, ctx, *, tags = ""):
         rating = (0, 10000)
-        tagsl = tags.split(',')
+        tagsl = tags.split(', ')
         problem_tags = []
 
         for t in tagsl:
@@ -73,7 +79,7 @@ class Codebot(commands.Cog):
                 if t in self.all_tags:
                     problem_tags.append(t)
                 else:
-                    await ctx.send(f"Unknown tag {t}")
+                    await ctx.reply(f"Unknown tag {t}")
                     await self.tags(ctx)
                     return 
 
@@ -85,7 +91,7 @@ class Codebot(commands.Cog):
         problems = process_response(request)
         problems = list(filter(check_problem(rating), problems))
         if len(problems) == 0:
-            await ctx.send("Could not find such a problem")
+            await ctx.reply("Could not find such a problem")
             return 
 
         random_problem = get_random_problem(problems)
@@ -100,7 +106,7 @@ class Codebot(commands.Cog):
             emb.add_field(name="Query", value = tags)
         emb.add_field(name="Tags", value=', '.join(random_problem["tags"] + [str(random_problem["rating"])] if "rating" in random_problem else []))
 
-        await ctx.send(embed = emb)
+        await ctx.reply(embed = emb)
 
 
     @commands.command()
@@ -123,3 +129,28 @@ class Codebot(commands.Cog):
 
         await ctx.send(embed=emb)
 
+    @commands.command()
+    async def duel(self, ctx, *, opponent : discord.User = None):
+        if opponent is None:
+            await ctx.reply("Gotta fight someone Dummy!")
+            return
+        if opponent == ctx.author:
+            await ctx.reply("Can't duel yourself Stupid!")
+            return
+        
+        react = await ctx.send(f"Yo {opponent.mention}, {ctx.author.mention} wants to duel you! React with 👍 to accept!")
+
+        try:
+            await self.client.wait_for(
+                    "reaction_add",
+                    timeout=60.0,
+                    check=lambda reaction, user: user == opponent
+                    and str(reaction.emoji) == "\N{THUMBS UP SIGN}"
+                    and reaction.message.id == react.id
+                    )
+        except asyncio.TimeoutError:
+            await ctx.send(f"Looks like {opponent.mention} is scared of {ctx.author.mention}")
+            return
+        else:
+            await ctx.send("Here goes!")
+            await self.problem(ctx)
