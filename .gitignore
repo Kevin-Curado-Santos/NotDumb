@@ -163,6 +163,7 @@ cython_debug/
 
 # webm files
 *.webm
+*.m4a
 
 # db files
 *.db
